@@ -11,6 +11,8 @@ function anim(a,anim,offx,offy)
   anim.loop=true
  end
 
+ anim.flipx=a.flip
+
  anim.step=anim.step or 0
 
  local sta=anim.start
@@ -41,6 +43,5 @@ function anim(a,anim,offx,offy)
  if(not offx) offx=0
  if(not offy) offy=0
 
- a.spr=sta+cur
- --spr(sta+cur,a.x+offx,a.y+offy,1,1,flx,fly)
+ spr(sta+(cur*a.spw),a.x+offx,a.y+offy,a.spw,a.sph,flx,fly)
 end -- anim

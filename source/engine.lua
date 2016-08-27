@@ -24,8 +24,9 @@ function create_actor(x,y,sizex,sizey)
 	a.flip=false
 	a.bsx=0
 	a.bsy=0
-	anims={}
-	curranim=1
+	a.anims={}
+	a.curranim=1
+	create_anim(a)
 	add(actor,a)
 	
 	return a
@@ -33,11 +34,14 @@ end
 
 function draw_actor(a)
 
-	if(a.x<actor[2].x+160 and a.x>actor[2].x-32
-		and a.y >actor[2].y-32 and a.y<actor[2].y+160)then
-			if (a.dx > 0) then a.flip=true end
-			if (a.dx < 0) then a.flip=false end
-			spr(a.sp,a.x,a.y,a.spw,a.sph, a.flip) end
+	--if(a.x<actor[2].x+160 and a.x>actor[2].x-32
+	--	and a.y >actor[2].y-32 and a.y<actor[2].y+160)then
+	--		if (a.dx > 0) then a.flip=true end
+	--		if (a.dx < 0) then a.flip=false end
+	--		spr(a.sp,a.x,a.y,a.spw,a.sph, a.flip) end
+	if (a.dx > 0) then a.flip=true end
+	if (a.dx < 0) then a.flip=false end
+	anim(a,a.anims[a.curranim])
 	
 end
 
@@ -47,17 +51,18 @@ function manage_actor(a)
 		if t=="enemy" then enemy_manager(a) end
 		if t=="health" then health_manager(a) end
 		if t=="actor" then adjust_velocity(a) end
+		if t=="jumpable" then manage_jumper(a) end
 		if t=="camera" then manage_camera(a) end
 		if t=="talkable" then manage_talker(a) end
 		if t=="pickup" then manage_pickup(a) end
-		if t=="animator" then manage_animation(a) end
+		if t=="ghost" then manage_ghost(a) end
 	end
 end
 
 function manage_camera(a)
 	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
 	a.x=actor[1].x-64
-	a.y=actor[1].y-64
+	a.y=0
 end
 
 function player_manager(a)
@@ -99,6 +104,8 @@ function adjust_velocity(a)
 	if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
 	if(a.vely>a.maxspeed)a.vely=a.maxspeed
 
+	if(a == actor[1] and btn(4) and touch_ground(a)) a.vely=-10
+
 	--if not solid_area((a.x+(a.spw*4))+a.velx,(a.y+(a.sph*4))+a.vely,a.spw*4,a.sph*4)
 	if not solid_a(a, a.velx, 0)
 	then
@@ -108,6 +115,7 @@ function adjust_velocity(a)
 	then
 		a.y+=a.vely
 	end
+
 end
 
 function control_player()
@@ -118,10 +126,33 @@ function control_player()
 	if (btn(1)) actor[1].dx=1
 	if (btn(2)) actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1
+
+	if actor[1].dx != 0 then
+		actor[1].curranim=2
+	else
+		actor[1].curranim=1
+	end
 end
 
 function manage_animation(a)
-	anim(a,a.anims[1])
+	
+end
+
+function create_anim(a)
+	-- create animations and set defaults
+	an={}
+	an.start=0
+	an.frames=4
+	an.speed=7
+	an.flipx=false
+	an.flipy=false
+	an.loop=true
+	an.reset=false 
+	an.step=0
+	an.current=1
+	an.reverse=false
+	add(a.anims,an)
+	return an
 end
 
 function _update60()
@@ -224,7 +255,7 @@ end
 
 function touch_ground(a)
 	-- grab the cell value
-	val=mget(a.x/8, (a.y + a.vely)/8)
+	val=mget(a.x/8, (a.y + (a.vely))/8)
 
 	return fget(val, 2)
 end
