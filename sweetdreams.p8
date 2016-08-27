@@ -133,21 +133,15 @@ function control_player()
 end
 
 function _update60()
-	if(inbattle==false) then
-		if(btnp(5) and menu_open==false)	then	menu_open=true sfx(4) return end
-	end
-	if(menu_open)	menu_update()	return
 	foreach(actor,manage_actor)
 end
 
 function _draw()
 	cls()
-	if(inbattle==false) then
-		map(0,0,0,0,128,128)
-		foreach(actor,draw_actor)
-		camera(actor[2].x,actor[2].y)
-	end
-	if(indialogue) draw_dialogue_box(actor[2].x,actor[2].y+88,15,2)
+	palt(15, true)
+	map(0,0,0,0,128,128)
+	foreach(actor,draw_actor)
+	camera(actor[2].x,actor[2].y)
 	if(debug)debug_function()
 end
 
@@ -593,6 +587,9 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
+
+
 
 
 
