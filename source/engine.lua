@@ -24,6 +24,8 @@ function create_actor(x,y,sizex,sizey)
 	a.flip=false
 	a.bsx=0
 	a.bsy=0
+	anims={}
+	curranim=1
 	add(actor,a)
 	
 	return a
@@ -47,11 +49,15 @@ function manage_actor(a)
 		if t=="actor" then adjust_velocity(a) end
 		if t=="camera" then manage_camera(a) end
 		if t=="talkable" then manage_talker(a) end
+		if t=="pickup" then manage_pickup(a) end
+		if t=="animator" then manage_animation(a) end
 	end
 end
 
 function manage_camera(a)
-	moveto(a, actor[1].x-64, actor[1].y-64, 2)
+	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
+	a.x=actor[1].x-64
+	a.y=actor[1].y-64
 end
 
 function player_manager(a)
@@ -71,8 +77,6 @@ end
 
 function adjust_velocity(a)
 	--check to make sure dir is >0
-
-	if(a==actor[2]) then return end
 
 	if (a.dx==0) then
 		a.velx=movetowards(a.velx,0,a.speed)
@@ -114,6 +118,10 @@ function control_player()
 	if (btn(1)) actor[1].dx=1
 	if (btn(2)) actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1
+end
+
+function manage_animation(a)
+	anim(a,a.anims[1])
 end
 
 function _update60()

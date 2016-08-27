@@ -1,8 +1,85 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/timer.lua
+
+
+-- creates and runs timers
+-- also supports pausing and resuming
+-- full info: http://www.lexaloffle.com/bbs/?tid=3202
+
+-- Contributors: BenWiley4000
+
+local timers = {}
+local last_time = nil
+
+function init_timers ()
+	last_time = time()
+end
+
+function add_timer (name,
+		length, step_fn, end_fn,
+		start_paused)
+	local timer = {
+		length=length,
+		elapsed=0,
+		active=not start_paused,
+		step_fn=step_fn,
+		end_fn=end_fn
+	}
+	timers[name] = timer
+	return timer
+end
+
+function update_timers ()
+	local t = time()
+	local dt = t - last_time
+	last_time = t
+	for name,timer in pairs(timers) do
+		if timer.active then
+			timer.elapsed += dt
+			local elapsed = timer.elapsed
+			local length = timer.length
+			if elapsed < length then
+				if timer.step_fn then
+					timer.step_fn(dt,elapsed,length,timer)
+				end  
+		else
+				timer.active = false
+				if timer.end_fn then
+					timer.end_fn(dt,elapsed,length,timer)
+				end
+			end
+		end
+	end
+end
+
+function pause_timer (name)
+	local timer = timers[name]
+	if (timer) timer.active = false
+end
+
+function resume_timer (name)
+	local timer = timers[name]
+	if (timer) timer.active = true
+end
+
+function restart_timer (name, start_paused)
+	local timer = timers[name]
+	if (not timer) return
+	timer.elapsed = 0
+	timer.active = not start_paused
+end
+
+
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/timer.lua
+
+
 -- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/sweetdreams_gameplay.lua
 
+
+pkup_cont=0
+time_to_play=180.0
 
 function setup_actors()
 	plr = create_actor(64,0,2,2)
@@ -10,6 +87,20 @@ function setup_actors()
 	plr.maxspeed=2
 	add(plr.type,"player")
 	add(plr.type,"health")
+	add(plr.type,"animator")
+	-- idle anim
+	plr.anims={}
+	plr.anims[1]={}
+	plr.anims[1].start=0
+	plr.anims[1].frames=4
+	plr.anims[1].speed=7
+	plr.anims[1].flipx=false
+	plr.anims[1].flipy=false
+	plr.anims[1].loop=true
+	plr.anims[1].reset=false 
+	plr.anims[1].step=0
+	plr.anims[1].current=0
+	plr.anims[1].reverse=true
 
 	local camera = create_actor(0,0,0,0)
 	add(camera.type,"camera")
@@ -17,8 +108,16 @@ function setup_actors()
 	camera.maxspeed=2
 end
 
+function manage_pickup(a)
+	pkup_cont+=1
+end
+
 function game_loop()
 
+end
+
+function init_sweetdreams()
+	init_timers()
 end
 
 
@@ -54,6 +153,8 @@ function create_actor(x,y,sizex,sizey)
 	a.flip=false
 	a.bsx=0
 	a.bsy=0
+	anims={}
+	curranim=1
 	add(actor,a)
 	
 	return a
@@ -77,11 +178,15 @@ function manage_actor(a)
 		if t=="actor" then adjust_velocity(a) end
 		if t=="camera" then manage_camera(a) end
 		if t=="talkable" then manage_talker(a) end
+		if t=="pickup" then manage_pickup(a) end
+		if t=="animator" then manage_animation(a) end
 	end
 end
 
 function manage_camera(a)
-	moveto(a, actor[1].x-64, actor[1].y-64, 2)
+	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
+	a.x=actor[1].x-64
+	a.y=actor[1].y-64
 end
 
 function player_manager(a)
@@ -101,8 +206,6 @@ end
 
 function adjust_velocity(a)
 	--check to make sure dir is >0
-
-	if(a==actor[2]) then return end
 
 	if (a.dx==0) then
 		a.velx=movetowards(a.velx,0,a.speed)
@@ -144,6 +247,10 @@ function control_player()
 	if (btn(1)) actor[1].dx=1
 	if (btn(2)) actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1
+end
+
+function manage_animation(a)
+	anim(a,a.anims[1])
 end
 
 function _update60()
@@ -312,6 +419,60 @@ end
 
 
 -- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/engine.lua
+
+
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/animation.lua
+
+
+-- Animation function that supports
+-- animation speed, looping (or not looping),
+-- stopping on a specific frame, flipping
+-- horizontal and/or vertical, and playing
+-- in reverse
+
+-- Contributors: Scathe (@clowerweb)
+
+function anim(a,anim,offx,offy)
+ if(anim.loop!=false) then
+  anim.loop=true
+ end
+
+ anim.step=anim.step or 0
+
+ local sta=anim.start
+ local cur=anim.current or 0
+ local stp=anim.step
+ local spd=anim.speed
+ local flx=anim.flipx
+ local fly=anim.flipy
+ local rst=anim.reset or 0
+ local lop=anim.loop
+ local rev=anim.reverse or false
+
+ anim.step+=1
+ stp=anim.step
+ if(not rev) then
+  if(stp%flr(30/spd)==0) cur+=1
+  if(cur==anim.frames) then
+   if(lop) then cur=0
+   else cur-=1 end
+  end
+ else
+  if(stp%flr(30/spd)==0) cur-=1
+  if(cur<0) cur=0
+ end
+
+ anim.current=cur
+
+ if(not offx) offx=0
+ if(not offy) offy=0
+
+ a.spr=sta+cur
+ --spr(sta+cur,a.x+offx,a.y+offy,1,1,flx,fly)
+end -- anim
+
+
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/animation.lua
 
 
 __gfx__
@@ -609,6 +770,70 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
