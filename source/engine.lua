@@ -50,23 +50,7 @@ function manage_actor(a)
 end
 
 function manage_camera(a)
-	if(actor[1].y < actor[2].y) then
-		actor[2].y-=128
-		if(needs_redadding) create_dads()
-	end
-	if(actor[1].y > actor[2].y + 128) then
-		actor[2].y+=128
-		if(needs_redadding) create_dads()
-	end
-
-	if(actor[1].x < actor[2].x) then
-		actor[2].x-=128
-		if(needs_redadding) create_dads()
-	end
-	if(actor[1].x > actor[2].x + 128) then
-		actor[2].x+=128
-		if(needs_redadding) create_dads()
-	end
+	
 end
 
 function player_manager(a)
@@ -128,7 +112,6 @@ function _update()
 	end
 	if(menu_open)	menu_update()	return
 	foreach(actor,manage_actor)
-	game_loop()
 end
 
 function _draw()
@@ -137,9 +120,6 @@ function _draw()
 		map(0,0,0,0,128,128)
 		foreach(actor,draw_actor)
 		camera(actor[2].x,actor[2].y)
-		if(menu_open)	draw_menu()
-	else
-		draw_battle()
 	end
 	if(indialogue) draw_dialogue_box(actor[2].x,actor[2].y+88,15,2)
 	if(debug)debug_function()
@@ -147,7 +127,6 @@ end
 
 function _init()
 	setup_actors()
-	start_dialogue({"pico 8 is cool"}, nil, nil)
 end
 
 function debug_function()
