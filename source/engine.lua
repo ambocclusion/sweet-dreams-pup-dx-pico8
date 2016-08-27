@@ -2,6 +2,7 @@
 actor={}
 debug=false
 caninput=true
+gravity=1
 
 function create_actor(x,y,sizex,sizey)
 	a={}
@@ -50,7 +51,7 @@ function manage_actor(a)
 end
 
 function manage_camera(a)
-	
+	moveto(a, actor[1].x-64, actor[1].y-64, 2)
 end
 
 function player_manager(a)
@@ -70,16 +71,25 @@ end
 
 function adjust_velocity(a)
 	--check to make sure dir is >0
+
+	if(a==actor[2]) then return end
+
 	if (a.dx==0) then
 		a.velx=movetowards(a.velx,0,a.speed)
 	else 
 		a.velx+=a.speed * a.dx
 	end
-	if (a.dy==0)then
-		a.vely=movetowards(a.vely,0,a.speed)
+	
+	if(a==actor[2]) then
+		if (a.dy==0) then
+			a.vely=movetowards(a.vely,0,a.speed)
+		else 
+			a.vely+=a.speed * a.dy
+		end
 	else
-		a.vely+=a.speed * a.dy 
+		a.vely += gravity
 	end
+
 	if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
 	if(a.velx>a.maxspeed)a.velx=a.maxspeed
 	if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
@@ -90,7 +100,7 @@ function adjust_velocity(a)
 	then
 		a.x+=a.velx
 	end
-	if not solid_a(a, 0, a.vely)
+	if not solid_a(a, 0, a.vely) and not touch_ground(a)
 	then
 		a.y+=a.vely
 	end
@@ -108,6 +118,7 @@ end
 
 function _update60()
 	foreach(actor,manage_actor)
+	game_loop()
 end
 
 function _draw()
@@ -138,13 +149,13 @@ function movetowards(num, target, speed)
 		then return num - speed end
 end
 
-function moveto(a, x, y)
+function moveto(a, x, y, sp)
 	a.dx=0
 	a.dy=0
-	if(a.x < x) a.dx+=1
-	if(a.x > x) a.dx-=1
-	if(a.y < y) a.dy+=1
-	if(a.y > y) a.dy-=1
+	if(a.x < x) a.dx+=sp
+	if(a.x > x) a.dx-=sp
+	if(a.y < y) a.dy+=sp
+	if(a.y > y) a.dy-=sp
 
 	if(a.x == x and a.y == y)	return true
 	return false
@@ -201,6 +212,13 @@ function solid(x, y)
 	-- sprite editor)
 	return fget(val, 1)
 
+end
+
+function touch_ground(a)
+	-- grab the cell value
+	val=mget(a.x/8, (a.y + a.vely)/8)
+
+	return fget(val, 2)
 end
 
 function solid_area(x,y,w,h)
