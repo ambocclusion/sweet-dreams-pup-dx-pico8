@@ -106,7 +106,7 @@ function control_player()
 	if (btn(3)) actor[1].dy=1
 end
 
-function _update()
+function _update60()
 	if(inbattle==false) then
 		if(btnp(5) and menu_open==false)	then	menu_open=true sfx(4) return end
 	end
