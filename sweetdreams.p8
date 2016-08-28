@@ -1,14 +1,14 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/timer.lua
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/timer.lua
 
 
 -- creates and runs timers
 -- also supports pausing and resuming
 -- full info: http://www.lexaloffle.com/bbs/?tid=3202
 
--- contributors: benwiley4000
+-- Contributors: BenWiley4000
 
 local timers = {}
 local last_time = nil
@@ -72,16 +72,18 @@ function restart_timer (name, start_paused)
 end
 
 
--- end /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/timer.lua
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/timer.lua
 
 
--- /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/sweetdreams_gameplay.lua
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/sweetdreams_gameplay.lua
 
 
 pkup_cont=0
 time_to_play=180.0
+game_timer={}
 
 function setup_actors()
+
 	plr = create_actor(64,60,2,2)
 	plr.speed=1
 	plr.maxspeed=2
@@ -107,6 +109,8 @@ end
 
 function create_ghosts()
 
+	sfx(2,0)
+	sfx(1,1)
 	ghosts={}
 	ghosts[1]=create_actor(128,62,2,2)
 	ghosts[1].anims[1]=create_anim(ghosts[1])
@@ -117,8 +121,14 @@ function create_ghosts()
 
 end
 
+function create_ghost_spawners()
+end
+
 function manage_jumper(a)
-	if(btn(4) and touch_ground(a)) a.vely=-14
+	if(btn(4) and touch_ground(a)) then
+		a.vely=-14
+		sfx(5, 0)
+	end
 end
 
 function manage_pickup(a)
@@ -129,36 +139,47 @@ function manage_ghost(a)
 
 end
 
+function manage_ghostspawner(a)
+
+end
+
 function game_loop()
 
 end
 
+function draw_ui()
+	rectfill(actor[2].x + 0, actor[2].y + 0, actor[2].x + 128, actor[2].y + 16,6)
+	print("pills "..pkup_cont,actor[2].x + 8, actor[2].y + 6,0)
+	print("time "..gametimer.elapsed,actor[2].x + 72, actor[2].y + 6,0)
+end
+
 function init_sweetdreams()
 	init_timers()
+	gametimer=add_timer("gametimer", time_to_play)
 end
 
 
--- end /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/sweetdreams_gameplay.lua
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/sweetdreams_gameplay.lua
 
 
--- /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/engine.lua
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/engine.lua
 
 
 -- print queue
 printq = {}
-function printfromq()
+function printFromQ()
 	for i,m in pairs(printq) do
-		print(m,actor[2].x, actor[2].y + 8 * (i - 1))
+		print(m,actor[2].x, actor[2].y + (32 + (8 * (i - 1))))
 	end
 	printq = {}
 end
-function addtoprintq(message)
+function addToPrintQ(message)
 	add(printq, message)
 end
 
 -- start engine
 actor={}
-debug=false
+debug=true
 caninput=true
 gravity=2
 
@@ -214,6 +235,7 @@ function manage_actor(a)
 		if t=="talkable" then manage_talker(a) end
 		if t=="pickup" then manage_pickup(a) end
 		if t=="ghost" then manage_ghost(a) end
+		if t=="ghost_spawner" then manage_ghostspawner(a) end
 	end
 end
 
@@ -312,6 +334,7 @@ function create_anim(a)
 end
 
 function _update60()
+	update_timers()
 	foreach(actor,manage_actor)
 	game_loop()
 end
@@ -322,11 +345,12 @@ function _draw()
 	map(0,0,0,0,128,128)
 	foreach(actor,draw_actor)
 	camera(actor[2].x,actor[2].y)
-	if(debug)debug_function()
-	if(debug)printfromq()
+	draw_ui()
+	if(debug)printFromQ()
 end
 
 function _init()
+	init_sweetdreams()
 	setup_actors()
 end
 
@@ -413,7 +437,7 @@ end
 function touch_ground(a)
 	-- grab the cell value
 	val=mget(a.x/8, (a.y+24)/8)
-	addtoprintq(a.x.." "..a.y .." "..(a.y+24).." "..val)
+	addToPrintQ(a.x.." "..a.y .." "..(a.y+24).." "..val)
 	return fget(val, 2)
 end
 
@@ -477,19 +501,19 @@ function distance(sx, sy, x, y)
 end
 
 
--- end /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/engine.lua
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/engine.lua
 
 
--- /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/animation.lua
+-- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/animation.lua
 
 
--- animation function that supports
+-- Animation function that supports
 -- animation speed, looping (or not looping),
 -- stopping on a specific frame, flipping
 -- horizontal and/or vertical, and playing
 -- in reverse
 
--- contributors: scathe (@clowerweb)
+-- Contributors: Scathe (@clowerweb)
 
 function anim(a,anim,offx,offy)
  if(anim.loop!=false) then
@@ -532,7 +556,7 @@ function anim(a,anim,offx,offy)
 end -- anim
 
 
--- end /users/allen/library/application support/pico-8/carts/jams/sweetdreams/source/animation.lua
+-- end /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/animation.lua
 
 
 __gfx__
@@ -830,4 +854,63 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

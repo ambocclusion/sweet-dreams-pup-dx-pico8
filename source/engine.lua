@@ -2,7 +2,7 @@
 printq = {}
 function printFromQ()
 	for i,m in pairs(printq) do
-		print(m,actor[2].x, actor[2].y + 8 * (i - 1))
+		print(m,actor[2].x, actor[2].y + (32 + (8 * (i - 1))))
 	end
 	printq = {}
 end
@@ -12,7 +12,7 @@ end
 
 -- start engine
 actor={}
-debug=false
+debug=true
 caninput=true
 gravity=2
 
@@ -68,6 +68,7 @@ function manage_actor(a)
 		if t=="talkable" then manage_talker(a) end
 		if t=="pickup" then manage_pickup(a) end
 		if t=="ghost" then manage_ghost(a) end
+		if t=="ghost_spawner" then manage_ghostspawner(a) end
 	end
 end
 
@@ -166,6 +167,7 @@ function create_anim(a)
 end
 
 function _update60()
+	update_timers()
 	foreach(actor,manage_actor)
 	game_loop()
 end
@@ -176,11 +178,12 @@ function _draw()
 	map(0,0,0,0,128,128)
 	foreach(actor,draw_actor)
 	camera(actor[2].x,actor[2].y)
-	if(debug)debug_function()
+	draw_ui()
 	if(debug)printFromQ()
 end
 
 function _init()
+	init_sweetdreams()
 	setup_actors()
 end
 
