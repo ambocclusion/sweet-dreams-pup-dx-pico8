@@ -15,7 +15,7 @@ function create_ghosts()
 	ghosts[1].anims[1]=create_anim(ghosts[1])
 	idleanim=ghosts[1].anims[1]
 	idleanim.start=42
-	idleanim.speed=3
+	idleanim.speed=6
 	idleanim.frames=3
 end
 
@@ -40,7 +40,7 @@ end
 
 function iter_idlepoint(a)
 	a.movingto+=1
-	if(a.movingto > #a.idlepoints+1) then
+	if(a.movingto > #a.idlepoints) then
 		a.movingto=1
 	end
 end
