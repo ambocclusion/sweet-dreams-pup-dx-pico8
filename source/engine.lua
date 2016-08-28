@@ -15,6 +15,7 @@ actor={}
 debug=true
 caninput=true
 gravity=2
+gamemode="game"
 
 function create_actor(x,y,sizex,sizey)
 	a={}
@@ -36,6 +37,8 @@ function create_actor(x,y,sizex,sizey)
 	a.flip=false
 	a.bsx=0
 	a.bsy=0
+	a.xoffset=0
+	a.yoffset=0
 	a.anims={}
 	a.curranim=1
 	create_anim(a)
@@ -55,7 +58,7 @@ function draw_actor(a)
 	if (a.dx < 0) then a.flip=false end
 	if(a.x<actor[2].x+160 and a.x>actor[2].x-32
 			and a.y >actor[2].y-32 and a.y<actor[2].y+160)then
-		anim(a,a.anims[a.curranim])
+		anim(a,a.anims[a.curranim],a.xoffset,a.yoffset)
 	end
 	
 end
@@ -79,9 +82,9 @@ end
 function manage_camera(a)
 	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
 	if(actor[1].flip) then
-		a.x+= ((actor[1].x-32) - a.x) * a.maxspeed
+		a.x+= ((actor[1].x-48) - a.x) * a.maxspeed
 	else
-		a.x+= ((actor[1].x-74) - a.x) * a.maxspeed
+		a.x+= ((actor[1].x-68) - a.x) * a.maxspeed
 	end
 	a.y=0
 end
@@ -132,7 +135,8 @@ function adjust_velocity(a)
 	--if not solid_area((a.x+(a.spw*4))+a.velx,(a.y+(a.sph*4))+a.vely,a.spw*4,a.sph*4)
 	if not solid_a(a, a.velx, 0)
 	then
-		a.x+=a.velx
+		if(a.velx > 0 and a.x < 126*8) a.x+=a.velx
+		if(a.velx < 0 and a.x > 4) a.x+=a.velx
 	end
 	if not solid_a(a, 0, a.vely)
 	then
@@ -145,7 +149,7 @@ function control_player()
 	actor[1].dx = 0
 	actor[1].dy = 0
 	if not caninput then return end
-	if (btn(0) and actor[1].x > 4) actor[1].dx=-1
+	if (btn(0)) actor[1].dx=-1
 	if (btn(1)) actor[1].dx=1
 	if (btn(2))	actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1	
@@ -182,21 +186,26 @@ function create_anim(a)
 end
 
 function _update()
-	update_timers()
-	foreach(actor,manage_actor)
-	game_loop()
+	if(gamemode=="game") then
+		update_timers()
+		foreach(actor,manage_actor)
+		game_loop()
+	end
 end
 
 function _draw()
 	cls()
 	palt(0, false)
 	palt(15, true)
-	rectfill(actor[2].x - 32,actor[2].y,actor[2].x + 152,actor[2].y + 120,5)
-	rectfill(-128,0,-1,128,0)
-	map(0,0,0,0,128,128)
-	foreach(actor,draw_actor)
-	camera(actor[2].x,actor[2].y)
-	draw_ui()
+	if(gamemode=="game") then
+		rectfill(actor[2].x - 32,actor[2].y,actor[2].x + 152,actor[2].y + 120,5)
+		rectfill(-128,0,-1,128,0)
+		rectfill(128*8,0,170*8,128,0)
+		map(0,0,0,0,128,128)
+		foreach(actor,draw_actor)
+		camera(actor[2].x,actor[2].y)
+		draw_ui()
+	end
 	if(debug)printFromQ()
 end
 

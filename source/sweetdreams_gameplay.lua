@@ -26,6 +26,25 @@ function setup_actors()
 	camera.maxspeed=.25
 
 	create_ghosts()
+	create_pills()
+end
+
+function create_pills()
+	for x=0,128,1 do 
+		for y=0,128,1 do 
+			if(fget(mget(x,y),3)) then
+				pill=create_actor(x*8,y*8,1,1)
+				pill.sp=64
+				pill.yoffset=-4
+				pill.maxspeed=8
+				add(pill.ignoretypes,"ghost")
+				pill.anims[1].start=64
+				pill.anims[1].frames=6
+				pill.anims[1].reverse=true
+				mset(x,y,0)
+			end
+		end
+	end
 end
 
 function create_ghost_spawners()

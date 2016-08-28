@@ -3,24 +3,36 @@ ghost_detect_dist=48
 function create_ghosts()
 	sfx(2,0)
 	sfx(1,1)
-	ghosts={}
-	ghosts[1]=create_actor(128,92,2,2)
-	add(ghosts[1].type, "ghost")
-	ghosts[1].speed=1
-	ghosts[1].maxspeed=.5
-	ghosts[1].state="idle"
-	ghosts[1].idlepoints={}
-	add(ghosts[1].idlepoints,ghosts[1].x - 64)
-	add(ghosts[1].idlepoints,ghosts[1].x + 64)
-	ghosts[1].chasedist=92
-	ghosts[1].movingto=1
-	ghosts[1].anims[1]=create_anim(ghosts[1])
-	idleanim=ghosts[1].anims[1]
+	for x=0,128,1 do 
+		for y=0,128,1 do 
+			if(fget(mget(x,y),4)) then
+				create_ghost(x*8,y*8)
+				mset(x,y,0)
+			end
+		end
+	end
+	
+end
+
+function create_ghost(x,y)
+	ghost=create_actor(x,y,2,2)
+	add(ghost.type, "ghost")
+	ghost.speed=1
+	ghost.maxspeed=.5
+	ghost.yoffset=-8
+	ghost.state="idle"
+	ghost.idlepoints={}
+	add(ghost.idlepoints,ghost.x - 64)
+	add(ghost.idlepoints,ghost.x + 64)
+	ghost.chasedist=92
+	ghost.movingto=1
+	ghost.anims[1]=create_anim(ghost)
+	idleanim=ghost.anims[1]
 	idleanim.start=42
 	idleanim.speed=6
 	idleanim.frames=3
-	ghosts[1].anims[2]=create_anim(ghosts[1])
-	attackanim=ghosts[1].anims[2]
+	ghost.anims[2]=create_anim(ghost)
+	attackanim=ghost.anims[2]
 	attackanim.start=32
 	attackanim.frames=5
 end
@@ -36,11 +48,22 @@ function manage_ghost_collision(a)
 end
 
 function ghost_collide(col)
-	actor[1].velx=(actor[1].x-col.x)*.5
+	actor[1].velx=(actor[1].x-col.x)*.75
+	if(actor[1].velx > actor[1].maxspeed*3) actor[1].velx=actor[1].maxspeed*2
+	if(actor[1].velx < -actor[1].maxspeed*3) actor[1].velx=-actor[1].maxspeed*2
 	actor[1].vely=-12
 end
 
 function ghost_logic(a)
+
+	a1,a2=solid_actor(a,a.velx,a.vely)
+
+	if(a2!=nil) then
+		for t in all(a2.type) do
+			if(t=="player")	ghost_collide(a)
+		end
+	end
+
 	if(a.state=="idle") ghost_idle_state(a)
 	if(a.state=="chasing") ghost_chasing_state(a)
 	if(a.state=="returning") ghost_returning_state(a)
