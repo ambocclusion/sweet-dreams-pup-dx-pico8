@@ -6,3 +6,6 @@
 05: JUMP
 06: PICKUP
 07: CRASH
+
+### Music
+Happy Pup: start at music slot 01 (loops forever on slot 02).
