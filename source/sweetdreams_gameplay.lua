@@ -4,13 +4,14 @@ game_timer={}
 
 function setup_actors()
 
-	plr = create_actor(32,60,2,2)
+	plr = create_actor(32,92,2,2)
 	plr.speed=2
 	plr.maxspeed=4
 	plr.flip=true
 	add(plr.type,"player")
 	add(plr.type,"health")
 	add(plr.type,"jumpable")
+	add(plr.type,"ghost_collision")
 	-- idle anim
 	idle=plr.anims[1]
 	idle.speed=8
@@ -21,10 +22,10 @@ function setup_actors()
 
 	local camera = create_actor(0,0,0,0)
 	add(camera.type,"camera")
-	camera.speed=2
-	camera.maxspeed=4
+	camera.speed=.25
+	camera.maxspeed=.25
 
-	--create_ghosts()
+	create_ghosts()
 end
 
 function create_ghost_spawners()
@@ -39,10 +40,6 @@ end
 
 function manage_pickup(a)
 	pkup_cont+=1
-end
-
-function manage_ghost(a)
-
 end
 
 function manage_ghostspawner(a)

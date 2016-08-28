@@ -84,13 +84,14 @@ game_timer={}
 
 function setup_actors()
 
-	plr = create_actor(32,60,2,2)
+	plr = create_actor(32,92,2,2)
 	plr.speed=2
 	plr.maxspeed=4
 	plr.flip=true
 	add(plr.type,"player")
 	add(plr.type,"health")
 	add(plr.type,"jumpable")
+	add(plr.type,"ghost_collision")
 	-- idle anim
 	idle=plr.anims[1]
 	idle.speed=8
@@ -101,10 +102,10 @@ function setup_actors()
 
 	local camera = create_actor(0,0,0,0)
 	add(camera.type,"camera")
-	camera.speed=2
-	camera.maxspeed=4
+	camera.speed=.25
+	camera.maxspeed=.25
 
-	--create_ghosts()
+	create_ghosts()
 end
 
 function create_ghost_spawners()
@@ -119,10 +120,6 @@ end
 
 function manage_pickup(a)
 	pkup_cont+=1
-end
-
-function manage_ghost(a)
-
 end
 
 function manage_ghostspawner(a)
@@ -152,14 +149,16 @@ end
 -- /Users/Allen/Library/Application Support/pico-8/carts/jams/sweetdreams/Source/ghost_logic.lua
 
 
+ghost_detect_dist=48
+
 function create_ghosts()
 	sfx(2,0)
 	sfx(1,1)
 	ghosts={}
-	ghosts[1]=create_actor(128,62,2,2)
+	ghosts[1]=create_actor(128,92,2,2)
 	add(ghosts[1].type, "ghost")
 	ghosts[1].speed=1
-	ghosts[1].maxspeed=2
+	ghosts[1].maxspeed=.5
 	ghosts[1].state="idle"
 	ghosts[1].idlepoints={}
 	add(ghosts[1].idlepoints,ghosts[1].x - 64)
@@ -171,32 +170,56 @@ function create_ghosts()
 	idleanim.start=42
 	idleanim.speed=6
 	idleanim.frames=3
+	ghosts[1].anims[2]=create_anim(ghosts[1])
+	attackanim=ghosts[1].anims[2]
+	attackanim.start=32
+	attackanim.frames=5
 end
 
-function ghost_logic(a)
-	--if(a.state=="idle") ghost_idle_state(a)
-	--if(a.state=="chasing") ghost_chasing_state(a)
-	--if(a.state=="returning") ghost_returning_state(a)
-end
+function manage_ghost_collision(a)
+	a1,a2=solid_actor(a,a.velx,a.vely)
 
-function ghost_idle_state(a)
-	moveto(a,a.idlepoints[a.movingto],a.y,a.maxspeed)
-	addToPrintQ(flr(a.x).." "..a.idlepoints[a.movingto])
-	addToPrintQ(a.movingto)
-	if(a.x-a.idlepoints[a.movingto] <= 1.0) then
-		iter_idlepoint(a)
+	if(a2!=nil) then
+		for t in all(a2.type) do
+			if(t=="ghost")	ghost_collide(a2)
+		end
 	end
 end
 
-function ghost_chasing_state(a)
+function ghost_collide(col)
+	actor[1].velx=(actor[1].x-col.x)*.5
+	actor[1].vely=-12
+end
 
+function ghost_logic(a)
+	if(a.state=="idle") ghost_idle_state(a)
+	if(a.state=="chasing") ghost_chasing_state(a)
+	if(a.state=="returning") ghost_returning_state(a)
+end
+
+function ghost_idle_state(a)
+	a.curranim=1
+	a.maxspeed=.5
+	if(moveto(a,a.idlepoints[a.movingto],a.y,a.maxspeed))	iter_idlepoint(a)
+	if(distance(a.x, a.y, actor[1].x, actor[1].y) < ghost_detect_dist)	a.state="chasing"
+end
+
+function ghost_chasing_state(a)
+	a.curranim=2
+	a.maxspeed=1.5
+	moveto(a,actor[1].x,actor[1].y, 1)
+	if(distance(a.x,a.y,actor[1].x,actor[1].y) >= 72)	a.state="returning"
+end
+
+function ghost_returning_state(a)
+	a.curranim=1
+	a.maxspeed=.5
+	if(moveto(a,a.idlepoints[a.movingto], a.y,1))	a.state="idle"
 end
 
 function iter_idlepoint(a)
 	a.movingto+=1
-	if(a.movingto > #a.idlepoints) then
-		a.movingto=1
-	end
+	if(a.movingto > #a.idlepoints)	a.movingto=1
 end
 
 
@@ -280,15 +303,16 @@ function manage_actor(a)
 		if t=="pickup" then manage_pickup(a) end
 		if t=="ghost" then ghost_logic(a) end
 		if t=="ghost_spawner" then manage_ghostspawner(a) end
+		if t=="ghost_collision" then manage_ghost_collision(a) end
 	end
 end
 
 function manage_camera(a)
 	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
 	if(actor[1].flip) then
-		a.x+= ((actor[1].x-32) - a.x) * .1
+		a.x+= ((actor[1].x-32) - a.x) * a.maxspeed
 	else
-		a.x+= ((actor[1].x-74) - a.x) * .1
+		a.x+= ((actor[1].x-74) - a.x) * a.maxspeed
 	end
 	a.y=0
 end
@@ -314,7 +338,11 @@ function adjust_velocity(a)
 	if (a.dx==0) then
 		a.velx=movetowards(a.velx,0,a.speed)
 	else 
-		a.velx+=a.speed * a.dx
+		if(a.dx > 0 and a.velx < a.maxspeed) then
+			a.velx+=a.speed
+		elseif(a.dx < 0 and a.velx > -a.maxspeed) then
+			a.velx-=a.speed
+		end
 	end
 	
 	if(a==actor[2]) then
@@ -327,8 +355,8 @@ function adjust_velocity(a)
 		a.vely += gravity
 	end
 
-	if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
-	if(a.velx>a.maxspeed)a.velx=a.maxspeed
+	--if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
+	--if(a.velx>a.maxspeed)a.velx=a.maxspeed
 	--if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
 	if(a.vely>a.maxspeed)a.vely=a.maxspeed
 
@@ -348,7 +376,7 @@ function control_player()
 	actor[1].dx = 0
 	actor[1].dy = 0
 	if not caninput then return end
-	if (btn(0) and actor[1].x > 1) actor[1].dx=-1
+	if (btn(0) and actor[1].x > 4) actor[1].dx=-1
 	if (btn(1)) actor[1].dx=1
 	if (btn(2))	actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1	
@@ -358,6 +386,9 @@ function control_player()
 	else
 		actor[1].curranim=1
 	end
+end
+
+function add_soft_push(a, amt)
 end
 
 function manage_animation(a)
@@ -391,7 +422,7 @@ function _draw()
 	cls()
 	palt(0, false)
 	palt(15, true)
-	rectfill(actor[2].x - 8,actor[2].y,actor[2].x + 136,actor[2].y + 120,5)
+	rectfill(actor[2].x - 32,actor[2].y,actor[2].x + 152,actor[2].y + 120,5)
 	rectfill(-128,0,-1,128,0)
 	map(0,0,0,0,128,128)
 	foreach(actor,draw_actor)
@@ -488,7 +519,6 @@ end
 function touch_ground(a)
 	-- grab the cell value
 	val=mget(a.x/8, (a.y+24)/8)
-	addToPrintQ(a.x.." "..a.y .." "..(a.y+24).." "..val)
 	return fget(val, 2)
 end
 
@@ -905,6 +935,155 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

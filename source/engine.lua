@@ -72,15 +72,16 @@ function manage_actor(a)
 		if t=="pickup" then manage_pickup(a) end
 		if t=="ghost" then ghost_logic(a) end
 		if t=="ghost_spawner" then manage_ghostspawner(a) end
+		if t=="ghost_collision" then manage_ghost_collision(a) end
 	end
 end
 
 function manage_camera(a)
 	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
 	if(actor[1].flip) then
-		a.x+= ((actor[1].x-32) - a.x) * .1
+		a.x+= ((actor[1].x-32) - a.x) * a.maxspeed
 	else
-		a.x+= ((actor[1].x-74) - a.x) * .1
+		a.x+= ((actor[1].x-74) - a.x) * a.maxspeed
 	end
 	a.y=0
 end
@@ -106,7 +107,11 @@ function adjust_velocity(a)
 	if (a.dx==0) then
 		a.velx=movetowards(a.velx,0,a.speed)
 	else 
-		a.velx+=a.speed * a.dx
+		if(a.dx > 0 and a.velx < a.maxspeed) then
+			a.velx+=a.speed
+		elseif(a.dx < 0 and a.velx > -a.maxspeed) then
+			a.velx-=a.speed
+		end
 	end
 	
 	if(a==actor[2]) then
@@ -119,8 +124,8 @@ function adjust_velocity(a)
 		a.vely += gravity
 	end
 
-	if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
-	if(a.velx>a.maxspeed)a.velx=a.maxspeed
+	--if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
+	--if(a.velx>a.maxspeed)a.velx=a.maxspeed
 	--if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
 	if(a.vely>a.maxspeed)a.vely=a.maxspeed
 
@@ -140,7 +145,7 @@ function control_player()
 	actor[1].dx = 0
 	actor[1].dy = 0
 	if not caninput then return end
-	if (btn(0) and actor[1].x > 1) actor[1].dx=-1
+	if (btn(0) and actor[1].x > 4) actor[1].dx=-1
 	if (btn(1)) actor[1].dx=1
 	if (btn(2))	actor[1].dy=-1
 	if (btn(3)) actor[1].dy=1	
@@ -150,6 +155,9 @@ function control_player()
 	else
 		actor[1].curranim=1
 	end
+end
+
+function add_soft_push(a, amt)
 end
 
 function manage_animation(a)
@@ -183,7 +191,7 @@ function _draw()
 	cls()
 	palt(0, false)
 	palt(15, true)
-	rectfill(actor[2].x - 8,actor[2].y,actor[2].x + 136,actor[2].y + 120,5)
+	rectfill(actor[2].x - 32,actor[2].y,actor[2].x + 152,actor[2].y + 120,5)
 	rectfill(-128,0,-1,128,0)
 	map(0,0,0,0,128,128)
 	foreach(actor,draw_actor)
@@ -280,7 +288,6 @@ end
 function touch_ground(a)
 	-- grab the cell value
 	val=mget(a.x/8, (a.y+24)/8)
-	addToPrintQ(a.x.." "..a.y .." "..(a.y+24).." "..val)
 	return fget(val, 2)
 end
 
