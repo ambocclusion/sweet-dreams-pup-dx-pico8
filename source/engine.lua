@@ -74,7 +74,11 @@ end
 
 function manage_camera(a)
 	--moveto(a, actor[1].x-64, actor[1].y-64, 1)
-	a.x=actor[1].x-64
+	if(actor[1].flip) then
+		a.x+= ((actor[1].x-32) - a.x) * .1
+	else
+		a.x+= ((actor[1].x-74) - a.x) * .1
+	end
 	a.y=0
 end
 
