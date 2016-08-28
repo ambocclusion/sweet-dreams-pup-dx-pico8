@@ -11,7 +11,7 @@ function setup_actors()
 	add(plr.type,"jumpable")
 	-- idle anim
 	idle=plr.anims[1]
-	idle.speed=3
+	idle.speed=4
 	run=create_anim(plr)
 	run.start=10
 	run.frames=3
@@ -38,7 +38,7 @@ function create_ghosts()
 end
 
 function manage_jumper(a)
-	if(btn(4) and touch_ground(a)) a.vely=-512
+	if(btn(4) and touch_ground(a)) a.vely=-14
 end
 
 function manage_pickup(a)

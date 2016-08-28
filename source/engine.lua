@@ -1,8 +1,20 @@
+-- print queue
+printq = {}
+function printFromQ()
+	for i,m in pairs(printq) do
+		print(m,actor[2].x, actor[2].y + 8 * (i - 1))
+	end
+	printq = {}
+end
+function addToPrintQ(message)
+	add(printq, message)
+end
+
 -- start engine
 actor={}
 debug=false
 caninput=true
-gravity=1
+gravity=2
 
 function create_actor(x,y,sizex,sizey)
 	a={}
@@ -101,17 +113,15 @@ function adjust_velocity(a)
 
 	if(a.velx<-a.maxspeed)a.velx=-a.maxspeed
 	if(a.velx>a.maxspeed)a.velx=a.maxspeed
-	if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
+	--if(a.vely<-a.maxspeed)a.vely=-a.maxspeed
 	if(a.vely>a.maxspeed)a.vely=a.maxspeed
-
-	if(a == actor[1] and btn(4) and touch_ground(a)) a.vely=-10
 
 	--if not solid_area((a.x+(a.spw*4))+a.velx,(a.y+(a.sph*4))+a.vely,a.spw*4,a.sph*4)
 	if not solid_a(a, a.velx, 0)
 	then
 		a.x+=a.velx
 	end
-	if not solid_a(a, 0, a.vely) and not touch_ground(a)
+	if not solid_a(a, 0, a.vely)
 	then
 		a.y+=a.vely
 	end
@@ -167,6 +177,7 @@ function _draw()
 	foreach(actor,draw_actor)
 	camera(actor[2].x,actor[2].y)
 	if(debug)debug_function()
+	if(debug)printFromQ()
 end
 
 function _init()
@@ -255,8 +266,8 @@ end
 
 function touch_ground(a)
 	-- grab the cell value
-	val=mget(a.x/8, (a.y + (a.vely))/8)
-
+	val=mget(a.x/8, (a.y+24)/8)
+	addToPrintQ(a.x.." "..a.y .." "..(a.y+24).." "..val)
 	return fget(val, 2)
 end
 
