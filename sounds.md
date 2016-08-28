@@ -6,6 +6,8 @@
 05: JUMP
 06: PICKUP
 07: CRASH
+12: BARK (play with below on channel 3)
+13: BARK
 
 ### Music
 Happy Pup: start at music slot 01 (loops forever on slot 02).
