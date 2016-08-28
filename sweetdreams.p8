@@ -381,7 +381,7 @@ function create_anim(a)
 	return an
 end
 
-function _update60()
+function _update()
 	update_timers()
 	foreach(actor,manage_actor)
 	game_loop()
@@ -905,6 +905,7 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
 
 
 
