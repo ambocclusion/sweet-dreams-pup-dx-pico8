@@ -53,7 +53,10 @@ function draw_actor(a)
 	--		spr(a.sp,a.x,a.y,a.spw,a.sph, a.flip) end
 	if (a.dx > 0) then a.flip=true end
 	if (a.dx < 0) then a.flip=false end
-	anim(a,a.anims[a.curranim])
+	if(a.x<actor[2].x+160 and a.x>actor[2].x-32
+			and a.y >actor[2].y-32 and a.y<actor[2].y+160)then
+		anim(a,a.anims[a.curranim])
+	end
 	
 end
 
@@ -67,7 +70,7 @@ function manage_actor(a)
 		if t=="camera" then manage_camera(a) end
 		if t=="talkable" then manage_talker(a) end
 		if t=="pickup" then manage_pickup(a) end
-		if t=="ghost" then manage_ghost(a) end
+		if t=="ghost" then ghost_logic(a) end
 		if t=="ghost_spawner" then manage_ghostspawner(a) end
 	end
 end
@@ -137,10 +140,10 @@ function control_player()
 	actor[1].dx = 0
 	actor[1].dy = 0
 	if not caninput then return end
-	if (btn(0)) actor[1].dx=-1
+	if (btn(0) and actor[1].x > 1) actor[1].dx=-1
 	if (btn(1)) actor[1].dx=1
-	if (btn(2)) actor[1].dy=-1
-	if (btn(3)) actor[1].dy=1
+	if (btn(2))	actor[1].dy=-1
+	if (btn(3)) actor[1].dy=1	
 
 	if actor[1].dx != 0 then
 		actor[1].curranim=2
@@ -178,7 +181,10 @@ end
 
 function _draw()
 	cls()
+	palt(0, false)
 	palt(15, true)
+	rectfill(actor[2].x - 8,actor[2].y,actor[2].x + 136,actor[2].y + 120,5)
+	rectfill(-128,0,-1,128,0)
 	map(0,0,0,0,128,128)
 	foreach(actor,draw_actor)
 	camera(actor[2].x,actor[2].y)
